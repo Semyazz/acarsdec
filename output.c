@@ -150,6 +150,22 @@ void outsv(acarsmsg_t * msg, int chn, time_t tm)
 	write(sockfd, pkt, strlen(pkt));
 }
 
+void printmsgjson(acarsmsg_t * msg, int chn, time_t tm)
+{
+	char pkt[500];
+	struct tm *tmp;
+
+	tmp = gmtime(&tm);
+    // TODO: fix new lines in text segment, because now newlines or doublequotes will simply break the JSON output
+	fprintf(fout,
+		"{\"idstation\":\"%8s\", \"chn\":\"%1d\", \"timestamp\":\"%02d/%02d/%04d %02d:%02d:%02d\", \"err\":\"%1d\", \"lvl\":\"%03d\", \"mode\":\"%1c\", \"addr\":\"%7s\", \"ack\":\"%1c\", \"label\":\"%2s\", \"bid\":\"%1c\", \"no\":\"%4s\", \"fid\":\"%6s\", \"txt\":\"%s\"\n",
+		idstation, chn + 1, tmp->tm_mday, tmp->tm_mon + 1,
+		tmp->tm_year + 1900, tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
+		msg->err, msg->lvl, msg->mode, msg->addr, msg->ack, msg->label,
+		msg->bid, msg->no, msg->fid, msg->txt);
+    fflush(fdout);
+}
+
 static void printmsg(acarsmsg_t * msg, int chn, time_t t)
 {
 #if defined (WITH_RTL) || defined (WITH_AIR)
@@ -292,5 +308,8 @@ void outputmsg(const msgblk_t * blk)
 	case 2:
 		printmsg(&msg, blk->chn, blk->tm);
 		break;
+    case 3:
+        printmsgjson(&msg, blk->chn, blk->tm);
+        break;
 	}
 }
